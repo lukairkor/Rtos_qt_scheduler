@@ -1,0 +1,1 @@
+pyuic5 szablon_scr.ui -o szablon_scr.py
