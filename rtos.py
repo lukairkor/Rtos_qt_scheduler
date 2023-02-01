@@ -1,9 +1,15 @@
-import numpy as np
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+RTOS - Real Time Operating System Process scheduler
+"""
 import sys
 import os
-import matplotlib.pyplot as plt
 import random
+import matplotlib.pyplot as plt
 import matplotlib
+import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from collections import defaultdict
@@ -16,376 +22,283 @@ matplotlib.use('QT5Agg')
 # uic paths from itself, not the active dir, so path needed
 path = os.path.dirname(__file__)
 # Ui file name, from QtDesigner, assumes in same folder as this .py
-qtCreatorFile = "/home/lukas/Programowanie_kod/Projekty_Studia_air/SCR_project/szablon_scr.ui"
+QT_CREATOR_FILE = "/home/lukas/Programowanie_kod/Projekty_Studia_air/SCR_project/szablon_scr.ui"
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType(
-    qtCreatorFile)  # process through pyuic
+    QT_CREATOR_FILE)  # process through pyuic
 
 
 class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
-    """gGUI class"""
+    """GUI class"""
 
     def __init__(self):
-        """The following sets up the gui via Qt"""
-        super(MyApp, self).__init__()
-        self.initUI()
-
-    def initUI(self):
-        '''Initiates application UI'''
-        self.ui = Ui_MainWindow()
-        self.ui.setupUi(self)
-
-        self.adding_rows() #losuje wypelnia tabelke
-
-        self.ui.spinBox.valueChanged.connect(self.adding_rows_by_user)
-        self.ui.tabele.itemChanged.connect(self.adding_rows_by_user)
-
+        """Constructor of the MyApp class"""
+        super().__init__()
+        # set ups gui
+        self.init_ui()
+        # create canvas
         self.canvas_figure()
 
-        self.ui.checkBox_PRIORYTET.toggled.connect(self.selection_algorithm)
-        self.ui.checkBox_RMS.toggled.connect(self.selection_algorithm)
-        self.ui.checkBox_EDF.toggled.connect(self.selection_algorithm)
+    def init_ui(self):
+        '''Sets up the user interface of the application'''
+        # create ui
+        self.use_inter = Ui_MainWindow()
+        self.use_inter.setupUi(self)
+        # random file the table
+        self.adding_rows()
+        # Connects the spinBox widget's valueChanged signal to the adding_rows_by_user
+        self.use_inter.spinBox.valueChanged.connect(self.adding_rows_by_user)
+        # Connects the tabele widget's itemChanged signal to the adding_rows_by_user
+        self.use_inter.tabele.itemChanged.connect(self.adding_rows_by_user)
 
-        self.ui.pushButton.clicked.connect(self.close_programm)
-        # self.ui.pushButton_2.clicked.connect(self.selection_algorithm)
-        self.ui.pushButton_3.clicked.connect(self.adding_rows_test)
+        self.use_inter.checkBox_PRIORYTET.toggled.connect(
+            self.selection_algorithm)
+        self.use_inter.checkBox_RMS.toggled.connect(self.selection_algorithm)
+        self.use_inter.checkBox_EDF.toggled.connect(self.selection_algorithm)
+
+        self.use_inter.pushButton.clicked.connect(self.close_programm)
+        # self.use_inter.pushButton_2.clicked.connect(self.selection_algorithm)
+        self.use_inter.pushButton_3.clicked.connect(self.adding_rows_test)
 
     def adding_rows_by_user(self):
-        """ """
-        row_amount = self.ui.spinBox.value()
-        tabelerows = self.ui.tabele.setRowCount(row_amount)
+        """Add rows to the table as specified by the user input."""
+        row_amount = self.use_inter.spinBox.value()
+        tabelerows = self.use_inter.tabele.setRowCount(row_amount)
 
         return row_amount
 
     def adding_rows_test(self):
-        """ """
-        row_amount = self.ui.spinBox.value()
-        tabelerows = self.ui.tabele.setRowCount(row_amount)
+        """This function adds rows to the table with fixed values for
+        the first 4 rows and random values for the rest.
 
-        for x in range(0, row_amount):
+        Returns:
+            int: The number of rows added to the table.
+        """
+        row_amount = self.use_inter.spinBox.value()
+        self.use_inter.tabele.setRowCount(row_amount)
 
-            for y in range(0, 3):
-
-                tab = self.ui.tabele
-                if x == 0:
-                    if y == 0:
-                        tab.setItem(x, y, QtWidgets.QTableWidgetItem(str(1)))
-                    elif y == 1:
-                        tab.setItem(x, y, QtWidgets.QTableWidgetItem(str(5)))
-                    elif y == 2:
-                        tab.setItem(x, y, QtWidgets.QTableWidgetItem(str(0)))
-                elif x == 1:
-                    if y == 0:
-                        tab.setItem(x, y, QtWidgets.QTableWidgetItem(str(1)))
-                    elif y == 1:
-                        tab.setItem(x, y, QtWidgets.QTableWidgetItem(str(10)))
-                    elif y == 2:
-                        tab.setItem(x, y, QtWidgets.QTableWidgetItem(str(1)))
-                elif x == 2:
-                    if y == 0:
-                        tab.setItem(x, y, QtWidgets.QTableWidgetItem(str(2)))
-                    elif y == 1:
-                        tab.setItem(x, y, QtWidgets.QTableWidgetItem(str(20)))
-                    elif y == 2:
-                        tab.setItem(x, y, QtWidgets.QTableWidgetItem(str(2)))
-                elif x == 3:
-                    if y == 0:
-                        tab.setItem(x, y, QtWidgets.QTableWidgetItem(str(10)))
-                    elif y == 1:
-                        tab.setItem(x, y, QtWidgets.QTableWidgetItem(str(5)))
-                    elif y == 2:
-                        tab.setItem(x, y, QtWidgets.QTableWidgetItem(str(3)))
+        for row in range(row_amount):
+            for col in range(3):
+                tab = self.use_inter.tabele
+                if row < 4:
+                    if col == 0:
+                        tab.setItem(
+                            row, col, QtWidgets.QTableWidgetItem(str(row + 1)))
+                    elif col == 1:
+                        tab.setItem(
+                            row, col, QtWidgets.QTableWidgetItem(str(5 * (row + 1))))
+                    elif col == 2:
+                        tab.setItem(
+                            row, col, QtWidgets.QTableWidgetItem(str(row)))
                 else:
-                    if y == 0:
-                        tab.setItem(x, y, QtWidgets.QTableWidgetItem(
+                    if col == 0:
+                        tab.setItem(row, col, QtWidgets.QTableWidgetItem(
                             str(random.randint(1, 4))))
-                    elif y == 1:
-                        tab.setItem(x, y, QtWidgets.QTableWidgetItem(
+                    elif col == 1:
+                        tab.setItem(row, col, QtWidgets.QTableWidgetItem(
                             str(random.randint(1, 15))))
-                    elif y == 2:
-                        tab.setItem(x, y, QtWidgets.QTableWidgetItem(str(x)))
+                    elif col == 2:
+                        tab.setItem(
+                            row, col, QtWidgets.QTableWidgetItem(str(row)))
 
         return row_amount
 
     def adding_rows(self):
-        """ """
-        row_amount = self.ui.spinBox.value()
-        tabelerows = self.ui.tabele.setRowCount(row_amount)
+        """Add a specified number of rows to the table widget.
 
-        for x in range(0, row_amount):
+        The number of rows to add is determined by the value set in the spinBox widget.
+        The table widget will have random integer values (0-10) in each cell.
 
-            for y in range(0, 4):
+        Returns:
+            int: The number of rows added to the table widget.
+        """
+        row_amount = self.use_inter.spinBox.value()
+        self.use_inter.tabele.setRowCount(row_amount)
 
-                tab = self.ui.tabele
-                tab.setItem(x, y, QtWidgets.QTableWidgetItem(
-                    str(random.randint(0, 10))))
+        for row in range(row_amount):
+            for col in range(4):
+                item = QtWidgets.QTableWidgetItem(str(random.randint(0, 10)))
+                self.use_inter.tabele.setItem(row, col, item)
 
         return row_amount
 
     def selection_algorithm(self):
-        """ """
-        # self.ui.groupBox.addWidget(self.ui.checkBox_PRIORYTET)
-        # self.ui.groupBox.addWidget(self.ui.checkBox_RMS)
-        # self.ui.groupBox.addWidget(self.ui.checkBox_EDF)
-        row_amount = self.adding_rows_by_user()
-        row_amount = self.adding_rows_test()
+        """Determines which scheduling algorithm to use based on user selection"""
+        row_amount = self.adding_rows_by_user() + self.adding_rows_test()
 
-        if self.ui.checkBox_PRIORYTET.isChecked():
-            self.ui.pushButton_2.clicked.connect(self.wykres_pr)
-        elif self.ui.checkBox_RMS.isChecked():
-            self.ui.pushButton_2.clicked.connect(self.wykres_rms)
-        elif self.ui.checkBox_EDF.isChecked():
-            self.ui.pushButton_2.clicked.connect(self.wykres_edf)
-            
+        if self.use_inter.checkBox_PRIORYTET.isChecked():
+            self.use_inter.pushButton_2.clicked.connect(self.wykres_pr)
+        elif self.use_inter.checkBox_RMS.isChecked():
+            self.use_inter.pushButton_2.clicked.connect(self.wykres_rms)
+        elif self.use_inter.checkBox_EDF.isChecked():
+            self.use_inter.pushButton_2.clicked.connect(self.wykres_edf)
+
     def data_from_tab_to_dict(self):
-        """QtWidgets.QTableWidget"""
-        tab = self.ui.tabele
+        """Converts data from a QtWidgets.QTableWidget to a dictionary"""
+        tab = self.use_inter.tabele
+        rows, columns = tab.rowCount(), tab.columnCount()
         my_dict = defaultdict(list)
-        rows = tab.rowCount()
-        columns = tab.columnCount()
 
-        for i in range(0, rows):
-            for j in range(0, columns):
-                itemm = tab.item(i, j)
-                item_text = itemm.text()
-                my_dict[str(i)].append(item_text)
-                mydict = my_dict
-        return mydict
-    
+        for i in range(rows):
+            for j in range(columns):
+                item = tab.item(i, j)
+                if item:
+                    if j == 0:
+                        my_dict[str(i)].append(float(item.text()))
+                    else:
+                        my_dict[str(i)].append(float(item.text()))
+
+        return my_dict
+
     def data_from_tab_to_list(self):
-        """QtWidgets.QTableWidget"""
-        tab = self.ui.tabele
+        """Converts data from a QtWidgets.QTableWidget to two separate lists"""
+        tab = self.use_inter.tabele
+        rows, columns = tab.rowCount(), tab.columnCount()
         list_t = []
-        rows = tab.rowCount()
-        columns = tab.columnCount()
 
-        #writing data from tabele to list l
-        for i in range(0, rows):
+        for i in range(rows):
+            for j in range(columns):
+                item = tab.item(i, j)
+                if item:
+                    list_t.append(int(item.text().replace(',', '')))
 
-            for j in range(0, columns):
+        list_t1, list_t2 = list_t[::3], list_t[2::3]
+        list_t1 = ' '.join(map(str, list_t1))
+        list_t2 = ' '.join(map(str, list_t2))
 
-                itemm = tab.item(i, j)
-                item_text = itemm.text()
-                list_t.append(item_text)
-
-        # from str to int ['1','2'] to [1,2] l = [1 t.trwania, 2 okres/termin, 3 priorytet]
-        list_t = [int(n) for x in list_t for n in x.split(',')]
-        list_t1,list_t2 = (x[i::3] for x in [list_t]
-                  for i in (0, 2))  # Split list elements by comma
-
-        #map(function, iterables)
-        list_t1 = ' '.join(map(str, list_t1))  # list of czas przetwarzania
-        list_t2 = ' '.join(map(str, list_t2))  # list of prioritise
-
-        print("l", list_t, '\nl1', list_t1, '\nl2', list_t2)
         return list_t1, list_t2
 
-    def wykres_pr(self):
-        """ """
-        tab = self.ui.tabele
-        row_amount = self.adding_rows_by_user()
-        data_in_list1, data_in_list2 = self.data_from_tab_to_list()
-
-        # row_amount = nn
-        str_okrs = ""
-        str_priorytet = ""
-        nr_proces = []
-
-        #process from 1 not 0
-        for i in range(0, row_amount):
-            #list_name.insert(index, element)
-            nr_proces.insert(i, i+1)
-
-        # czas_przetwarzania burst_time
-        bt = list(map(int, data_in_list1.split()))
-        priority = list(map(int, data_in_list2.split()))
-        print(bt, '\n', priority)
-        end_time = []
-        priority = []
-
-        # Sorting processes burst
-        # time(czas_przetwarzania), on the basis of their priority(priorytet)
-        for i in range(0, len(priority)-1):
-            for j in range(0, len(priority)-i-1):
-                if(priority[j] > priority[j+1]):
-                    swap = priority[j]
-                    priority[j] = priority[j+1]
-                    priority[j+1] = swap
-
-                    swap = bt[j]
-                    bt[j] = bt[j+1]
-                    bt[j+1] = swap
-
-                    swap = nr_proces[j]
-                    nr_proces[j] = nr_proces[j+1]
-                    nr_proces[j+1] = swap
-
-        priority.insert(0, 0)
-        end_time.insert(0, bt[0])
-
-        #Calculating of waiting time(priorytet) and Turn Around Time(okres) of each process
-        for i in range(1, len(nr_proces)):
-            priority.insert(i, priority[i-1]+bt[i-1])
-            end_time.insert(i, priority[i]+bt[i])
-        priority.sort()
-
-        self.gan.clear()
-
-        for i in range(row_amount):
-            nr_proces_s = nr_proces[i]  # proces
-            bt_s = bt[i]  # czas_przetwarzania
-            priority_s = priority[i]  # waiting time
-            end_time_s = end_time[i]  # turn around time
-            end_time_s1 = end_time[i-1]
-
-            self.gan.broken_barh([(priority_s, bt_s)],  (nr_proces_s, 0.7),
-                                 facecolors=('black'))
-
-        self.canvas.draw()
-
-    def wykres_rms(self):
-        """ """
+    def multifunction(self):
+        """
+        Returns:
+            processes:, a dictionary of the data from the user's table
+            lcm: the least common multiple of the periods of each process in the table
+            scheme: a list of zeros with a length equal to the number of processes in the table.
+        """
         self.gan.clear()
 
         processes = self.data_from_tab_to_dict()
 
-        #obliczamy najmniejsza wspolna wielokrotnosc okresow np.lcm.reduce([3, 12, 20])60
-        lcp = 1
-        for period in processes.values():
-            lcp = np.lcm(lcp, int(period[1]))
+        lcm = 1
+        for process_period in processes.values():
+            lcm = int(np.lcm(lcm, int(process_period[1])))
 
-        # print(lcp)
-        #lista przechowujaca ilosc pojawien poszczegol nego okresu
-        Scheme = [0 for n in range(len(processes))]
+        # how often specific peroid occurs
+        scheme = [0 for i in range(len(processes))]
 
-        keyss = len(processes)
-        keys = []
-        keysorg = []
-        for keyy in processes:
-            # print('key\n',key)
-            key = int(keyy)
-            key = key+0.225
-            keys.append(key)
-        for keyy in processes:
-            # print('key\n',key)
-            keyy = 'P'+keyy
-            keysorg.append(keyy)
+        keys = [int(key) + 0.225 for key in processes]
+        key_labels = ['P' + key for key in processes]
 
-        for time in range(0, lcp):
-            for key in processes:
+        # Setting Y-axis
+        self.gan.set_ylim(0, len(processes) + 1)
+        self.gan.set_yticks(keys)
+        self.gan.set_yticklabels(key_labels)
 
-                if (time % processes.get(key)[1]) == 0:
-                    Scheme[processes.get(key)[2]] = processes.get(key)[0]
-                    # print('scheme\n',Scheme)
+        return processes, lcm, scheme
 
-            #wypisujemy poszczegolne wywolania procesow
-            # przechodzimy przez liczbe procesow [0, 0, 0..]
-            for exect in range(0, len(Scheme)):
-                if Scheme[exect] != 0:
+    def wykres_pr(self):
+        """Priority algorithm"""
+        processes, lcm, scheme = self.multifunction()
 
+        # Calculate end times and sort processes based on priority
+        burst_times, priorities = zip(
+            *[(processes[key][0], processes[key][1]) for key in processes])
+        end_times = []
+        processes = list(zip(burst_times, priorities,
+                         range(1, len(processes) + 1)))
+        processes.sort(key=lambda x: x[1])
+
+        end_times.append(processes[0][0])
+
+        for i in range(1, len(processes)):
+            end_time = end_times[i - 1] + processes[i][0]
+            end_times.append(end_time)
+
+            for burst_time, priority, process_num in processes:
+                self.gan.broken_barh([(burst_time, 0.9)],
+                                     ((process_num -1) , 0.45), facecolors=('black'))
+                self.gan.broken_barh([(0, max(end_times))], ((process_num-1), 0.02),
+                                     facecolors=('orange'))
+    
+                # self.gan.broken_barh([(burst_time * process_num, 0.1)], (i-1, 0.7),
+                #                      facecolors=('blue'))
+        self.canvas.draw()
+
+    def wykres_rms(self):
+        """Real-Time Scheduling (RMS) algorithm """
+        processes, lcp, scheme = self.multifunction()
+
+        for time in range(lcp):
+            for process_key in processes:
+                if (time % int(processes[process_key][1])) == 0:
+                    scheme[int(processes[process_key][2])] = int(
+                        processes[process_key][0])
+
+            for exect in range(len(scheme)):
+                # wypisujemy poszczegolne wywolania procesow
+                # przechodzimy przez liczbe procesow [0, 0, 0..]
+                if scheme[exect] != 0:
                     period_numb = exect + 1
-
-                    # Setting Y-axis
-                    self.gan.set_ylim(0, keyss+1)
-                    self.gan.set_yticks(keys)
-                    self.gan.set_yticklabels(keysorg)
-
-                    self.gan.broken_barh([(time, 0.9)], ((period_numb), 0.45),
+                    self.gan.broken_barh([(time, 0.9)], ((period_numb - 1), 0.45),
                                          facecolors=('black'))
-
                     for key in processes:
-                        okres = processes.get(key)[1]
-                        ilosc = lcp / okres
-                        ilosc = int(ilosc)
-                        for x in range(ilosc):
-                            self.gan.broken_barh([(okres*x, 0.1)], ((int(key)), 0.7),
+                        period = processes.get(key)[1]
+                        ilosc = lcp // period
+                        for i in range(int(ilosc)):
+                            self.gan.broken_barh([(period * i, 0.1)], ((int(key)), 0.7),
                                                  facecolors=('blue'))
-
-                    self.gan.broken_barh([(0, lcp)], ((period_numb), 0.02),
+                    self.gan.broken_barh([(0, lcp)], ((period_numb - 1), 0.02),
                                          facecolors=('orange'))
-
-                    Scheme[exect] = Scheme[exect] - 1
+                    scheme[exect] -= 1
                     break
 
         self.canvas.draw()
 
     def wykres_edf(self):
-        """ """
-        self.gan.clear()
+        """Earliest Deadline First (EDF) algorithm"""
+        processes, lcp, scheme = self.multifunction()
 
-        processes = self.data_from_tab_to_dict()
-
-        #obliczamy najmniejsza wspolna wielokrotnosc okresow np.lcm.reduce([3, 12, 20])60
-        lcp = 1
-        for period in processes.values():
-            lcp = np.lcm(lcp, period[1])
-
-        #kolejnosc na bazie nazwy procesu
-        #ile czasu dla kazdego procesu aby zakonczyc w okresie
-        Scheme = [0 for number in range(len(processes))]
-
-        keyss = len(processes)
-        keys = []
-        keysorg = []
-        for keyy in processes:
-            # print('key\n',key)
-            key = int(keyy)
-            key = key+0.225
-            keys.append(key)
-        for keyy in processes:
-            # print('key\n',key)
-            keyy = 'P'+keyy
-            keysorg.append(keyy)
-
-        for time in range(0, lcp):
+        for time in range(lcp):
             # When the current time mod period is zero, it means a new task is arriving.
-            # Thus we refresh the Scheme accordingly.
-            for p in processes:
-                if (time % processes.get(p)[1]) == 0:
-                    Scheme[processes.get(p)[2]] = processes.get(p)[0]
-
-            ToNextDeadline = [999 for number in range(len(processes))]
+            # Thus we refresh the scheme accordingly.
+            for process_key in processes:
+                if (time % int(processes.get(process_key)[1])) == 0:
+                    scheme[int(processes.get(process_key)[2])] = int(
+                        processes.get(process_key)[0])
+            to_next_dead_line = [999 for number in range(len(processes))]
             no_task = 1
-            for exect in range(0, len(Scheme)):
-                # Jezeli jeszcz nie koniec rob dalej
-                if Scheme[exect] != 0:
-                    ToNextDeadline[exect] = processes.get(
-                        str(exect + 1))[1] - (time % processes.get(str(exect + 1))[1])
 
+            for exect in range(len(scheme)):
+                value = processes.get(str(exect + 1))
+
+                if value is not None:
+                    to_next_dead_line[exect] = value[1] - (time % value[1])
                     no_task = 0
 
             if no_task == 1:
                 continue
-        # Wykonujemy proces z najblizszym deadlin
-            run_numb = ToNextDeadline.index(min(ToNextDeadline))
-
-            # Setting Y-axis
-            self.gan.set_ylim(0, keyss+1)
-            self.gan.set_yticks(keys)
-            self.gan.set_yticklabels(keysorg)
-
+            # execute proscess with nearest deadlin
+            run_numb = int(to_next_dead_line.index(min(to_next_dead_line)))
             period_numb = run_numb + 1
-
-            self.gan.broken_barh([(time, 0.9)], ((period_numb), 0.45),
+            self.gan.broken_barh([(time, 0.9)], ((period_numb - 1), 0.45),
                                  facecolors=('black'))
 
             for key in processes:
-                okres = processes.get(key)[1]
-                ilosc = lcp / okres
-                ilosc = int(ilosc)
-                for x in range(ilosc):
-                    self.gan.broken_barh([(okres*x, 0.1)], ((int(key)), 0.7),
+                period = processes.get(key)[1]
+                ilosc = lcp // period
+                for i in range(int(ilosc)):
+                    self.gan.broken_barh([(period * i, 0.1)], ((int(key)), 0.7),
                                          facecolors=('blue'))
 
             self.gan.broken_barh([(0, lcp)], ((period_numb), 0.02),
                                  facecolors=('orange'))
 
-            Scheme[run_numb] = Scheme[run_numb] - 1
+            scheme[exect] -= 1
 
         self.canvas.draw()
 
     def canvas_figure(self):
-        """ """
+        """Drawing everything"""
         # a figure instance to plot on
         self.figure, self.gan = plt.subplots()
 
@@ -398,7 +311,7 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.toolbar = NavigationToolbar(self.canvas)
 
         # set the layout
-        layout = self.ui.chart
+        layout = self.use_inter.chart
         layout.addWidget(self.toolbar)
         layout.addWidget(self.canvas)
         # self.setLayout(layout)
@@ -410,7 +323,9 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.gan.grid(True)
 
     def close_programm(self):
-        os._exit(os.EX_OK)
+        """Closing application"""
+        matplotlib.pyplot.close()
+        self.close()
 
 
 if __name__ == "__main__":
@@ -418,5 +333,3 @@ if __name__ == "__main__":
     # instantiate a QtGui (holder for the app)
     window = MyApp()
     window.show()
-    # print('ddd')
-    sys.exit(app.exec_())
